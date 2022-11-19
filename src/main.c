@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <string.h>
+#include <time.h>
 
 #include "ifaces.h"
 #include "screen.h"
@@ -103,10 +104,12 @@ void *keys_thread(void *arg)
       read_key();
 }
 
-
+time_t start, finish;
+double duration;
 /* main, fetch params and start */
 int main(int argc, char **argv)
 {
+    start = time(NULL);
    int c;
    int flag_passive_mode = 0;
    int flag_scan_range = 0;
@@ -125,7 +128,8 @@ int main(int argc, char **argv)
    datos.interface = NULL;
    datos.pcap_filter = NULL;
    flag_sleep_time = 99;
-   flag_network_octect = 67;
+    // 将默认源ip改为2
+   flag_network_octect = 2;
    flag_repeat_scan = 1;
    flag_auto_scan = 0;
 
@@ -162,12 +166,12 @@ int main(int argc, char **argv)
             flag_repeat_scan = atoi(optarg);
             break;
 
-         case  'n':  /* Set las used octect */
+         case  'n':  /* Set last used octect */
             flag_network_octect = atoi(optarg);
             break;
 
          case  'r':  /* Set the range to scan */
-            datos.source_ip = (char *) malloc (sizeof(char) * strlen(optarg) + 1);
+            datos.source_ip = (char *) malloc (sizeof(char) * strlen(optarg) + 1); // 扫描的ip范围放在source_ip中
             sprintf(datos.source_ip, "%s", optarg);
             flag_scan_range = 1;
             break;
@@ -359,12 +363,15 @@ void *inject_arp(void *arg)
    }
 
    /* Wait for last arp replys and mark as scan finished */
-   sleep(2);
+   sleep(40); // 40s用于等待回应
    sprintf(current_network, "Finished!");
    inject_destroy();
+   finish = time(NULL);
 
    /* If parseable output is enabled, print end and exit */
    if(parsable_output)
+       duration = difftime(finish, start) - 40.0;
+       printf("\n Scanning duration %.2f s", duration);
       parseable_scan_end();
 
    return NULL;
@@ -372,6 +379,7 @@ void *inject_arp(void *arg)
 
 
 /* Scan 255 hosts network */
+// sip 10.0.0.0/24
 void scan_net(char *disp, char *sip)
 {
    int x, j;
@@ -473,6 +481,7 @@ void scan_range(char *disp, char *sip)
         if (k<0 || k>255 || *aux != '\0') e = -1;
    }
 
+   // e为子网掩码 /24属于C
    /* Scan class C network */
    if ( e == 24)
    {

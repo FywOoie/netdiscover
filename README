@@ -13,6 +13,27 @@ newer.
 An excessive cpu consumption happens on OpenBSD, due to threads design and the
 use of pcap_open_live() with pcap_loop(), any sugestions for fix are welcome.
 
+About this fork:
+============
+
+I am currently using this tool for testing my system, which is a IP address
+mutation system deployed in mininet where hosts' IP address mutate for each
+period of time.
+
+The requirement for this testing experiment is to compare the number of scanning
+result with a specific scanning rate of many tools such as nmap, arp-scan and
+Fping.
+
+When I was testing with other tools, the results were successfully shown. But
+this tool returned no results. After reading the log, I discovered the source
+IP address of the sniffing arp packet was not the sending host. The problem was
+solved by "-n" option. Without it, the default fourth octet was 67.
+
+Another problem was this tool has delay to return the scanning results in my
+environment, which means the list of hosts were shown after the "Currently
+scanning" state became "Finished". So I adjust the sleep time of listening to arp
+reply to 40 seconds. In the meanwhile, I need time of the scanning process,
+so a timer was added.
 
 Requirements
 ============
@@ -116,3 +137,6 @@ Bugs & Contact
 
 Feel free to mail me with any problem, bug, suggestions or fixes at:
 Jaime Penalba <jpenalbae@gmail.com>
+
+About This fork
+When I use
